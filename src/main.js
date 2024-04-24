@@ -1,4 +1,6 @@
 import { nowInSec, SkyWayAuthToken, SkyWayContext, SkyWayStreamFactory, uuidV4, SkyWayChannel } from '@skyway-sdk/core';
+import { SfuBotPlugin } from '@skyway-sdk/sfu-bot';
+
 const token = new SkyWayAuthToken({
     jti: uuidV4(),
     iat: nowInSec(),
@@ -189,12 +191,22 @@ const token = new SkyWayAuthToken({
         try {
 
             const context = await SkyWayContext.Create(token);
+            const sfuBotPlugin = new SfuBotPlugin();
+
+            context.registerPlugin(sfuBotPlugin);
+
+            console.log('created context');
 
             // Search channel or create
             const channel = await SkyWayChannel.FindOrCreate(context, {
                 name: channelNameInput.value,
                 metadata: 'something',
             });
+
+            const bot = await sfuBotPlugin.createBot(channel);
+            const maxSubscribers = 2;
+
+            console.log('created bot');
 
             // Save the member
             const me = await channel.join();
@@ -203,9 +215,6 @@ const token = new SkyWayAuthToken({
             // Publish audio
             audioPublication = await me.publish(
                 audio,
-                {
-                    maxSubscribers: 50
-                }
             );
             // Mute for default
             await audioPublication.disable();
@@ -214,7 +223,6 @@ const token = new SkyWayAuthToken({
             videoPublication = await me.publish(
                 video,
                 {
-                    maxSubscribers: 50,
                     encodings: [
                         {
                             scaleResolutionDownBy: 4,
@@ -229,6 +237,16 @@ const token = new SkyWayAuthToken({
                             maxFramerate: 30
                         }
                     ],
+                });
+
+            await bot.startForwarding(audioPublication,
+                {
+                    maxSubscribers: maxSubscribers,
+                });
+
+            await bot.startForwarding(videoPublication,
+                {
+                    maxSubscribers: maxSubscribers,
                 });
 
             const subscribeAndAttach = (publication) => {
@@ -278,8 +296,20 @@ const token = new SkyWayAuthToken({
                 }
             };
 
-            channel.publications.forEach(subscribeAndAttach); // 1
-            channel.onStreamPublished.add((e) => subscribeAndAttach(e.publication));
+            channel.publications.forEach((e) => {
+                console.log('published by SFU');
+                if (e.publisher.subtype === 'sfu') {
+                    console.log('published by SFU');
+                    subscribeAndAttach(e);
+                }
+            }); // 1
+
+            channel.onStreamPublished.add((e) => {
+                if (e.publication.publisher.subtype === 'sfu') {
+                    console.log('published by SFU');
+                    subscribeAndAttach(e.publication);
+                }
+            });
         } catch (error) {
             console.error(`Error: ${error}`);
         }
