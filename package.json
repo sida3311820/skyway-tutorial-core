@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "parcel src/index.html --open",
-    "dev": "rm -rf docs && parcel build src/index.html --dist-dir docs --public-url /skyway-tutorial-core/"
+    "dev": "rm -rf .parcel-cache && rm -rf docs && parcel build src/index.html --dist-dir docs --public-url /skyway-tutorial-core/"
   },
   "author": "",
   "license": "ISC",

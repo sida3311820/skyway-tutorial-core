@@ -195,8 +195,6 @@ const token = new SkyWayAuthToken({
 
             context.registerPlugin(sfuBotPlugin);
 
-            console.log('created context');
-
             // Search channel or create
             const channel = await SkyWayChannel.FindOrCreate(context, {
                 name: channelNameInput.value,
@@ -205,8 +203,6 @@ const token = new SkyWayAuthToken({
 
             const bot = await sfuBotPlugin.createBot(channel);
             const maxSubscribers = 2;
-
-            console.log('created bot');
 
             // Save the member
             const me = await channel.join();
@@ -251,7 +247,7 @@ const token = new SkyWayAuthToken({
 
             const subscribeAndAttach = (publication) => {
                 // 3
-                if (publication.publisher.id === me.id) return;
+                if (publication.publisher.subtype != 'sfu' || publication.origin.publisher.id === me.id) return;
 
                 const subscribeButton = document.createElement('button'); // 3-1
                 subscribeButton.textContent = `${publication.publisher.id}: ${publication.contentType}`;
@@ -287,7 +283,7 @@ const token = new SkyWayAuthToken({
             // Switch the encoding setting if you click the video
             const switchEncodingSetting = async (e) => {
                 const videoId = e.srcElement.id;
-                const subscription = channel.subscriptions.find((subscription) => subscription.stream.id == videoId);
+                const subscription = me.subscriptions.find((subscription) => subscription.stream.id == videoId);
 
                 if (subscription.preferredEncoding === 'high') {
                     subscription.changePreferredEncoding('low');
@@ -296,20 +292,8 @@ const token = new SkyWayAuthToken({
                 }
             };
 
-            channel.publications.forEach((e) => {
-                console.log('published by SFU');
-                if (e.publisher.subtype === 'sfu') {
-                    console.log('published by SFU');
-                    subscribeAndAttach(e);
-                }
-            }); // 1
-
-            channel.onStreamPublished.add((e) => {
-                if (e.publication.publisher.subtype === 'sfu') {
-                    console.log('published by SFU');
-                    subscribeAndAttach(e.publication);
-                }
-            });
+            channel.publications.forEach(subscribeAndAttach); // 1
+            channel.onStreamPublished.add((e) => subscribeAndAttach(e.publication));
         } catch (error) {
             console.error(`Error: ${error}`);
         }
