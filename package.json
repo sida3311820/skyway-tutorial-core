@@ -9,11 +9,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@skyway-sdk/core": "^1.7.1",
-    "@skyway-sdk/sfu-bot": "^1.7.1"
+    "@skyway-sdk/core": "1.11.0",
+    "@skyway-sdk/sfu-bot": "1.11.1",
+    "skyway-video-processors": "^1.0.1"
   },
   "devDependencies": {
     "buffer": "^6.0.3",
     "parcel": "^2.12.0"
-  }
+  },
+  "packageManager": "npm@11.4.1+sha512.fcee43884166b6f9c5d04535fb95650e9708b6948a1f797eddf40e9778646778a518dfa32651b1c62ff36f4ac42becf177ca46ca27d53f24b539190c8d91802b"
 }
